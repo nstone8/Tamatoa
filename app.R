@@ -6,18 +6,13 @@ ui=fluidPage(
     titlePanel("Rasylum"),
     mainPanel(
         fileInput(inputId="directory",label="Select input files",multiple=TRUE,),
-        dataTableOutput("fileList"), 
-        textInput(inputId="consts",label="Enter consts separated by commas"),
+        dataTableOutput("fileList"),
         selectInput(inputId="suffix",label="Enter file extension",c(".ibw"="ibw",".ardf"="ardf")),
+        uiOutput("suffixControl"),
         actionButton("loadData","Load Data"),
         dataTableOutput("allCases"),
-        numericInput("rBead","Bead radius in meters",0),
-        numericInput("CPMaxF","CPMaxF",value="0.05"),
-        numericInput("percentToFit","percentToFit",value="0.2"),
-        numericInput("roughness","roughness",value="0.05"),
-        numericInput("Q","Q",value="0.5"),
-        numericInput("approachTrim","approachTrim",value="0.2"),
-        numericInput("minRise","minRise",value="0"),
+        selectInput(inputId="operation",label="Choose Operation to Perform",c("Extract Stiffness"=0,"Extract Time Constant"=1)),
+        uiOutput("operationControl"),
         actionButton("goButton","Run Fits"),
         dataTableOutput("fitFrame"),
         plotOutput("fitPlot"),
@@ -27,6 +22,12 @@ ui=fluidPage(
 
 server=function(input,output){
     options(shiny.maxRequestSize=1000*1024^2)
+
+    output$suffixControl=renderUI({
+        if(input$suffix=="ibw"){
+            textInput(inputId="consts",label="Enter consts separated by commas")
+        }
+    })
     dataset=eventReactive(input$loadData,{
         consts=c()
         if(input$suffix=="ibw"){
@@ -55,7 +56,7 @@ server=function(input,output){
                                         #loadPreSorted or loadARDF for every dir, then concatenate
         if(input$suffix=="ibw"){
             for(directory in levels(factor(dirs))){
-                cases=loadPreSorted(directory,consts,input$suffix)
+                cases=loadPreSorted(directory,consts,paste(".",input$suffix,sep=""))
                 allCases=c(allCases,cases)
             }
         }else if(input$suffix=="ardf"){
@@ -76,10 +77,27 @@ server=function(input,output){
         }
         return(allIdents)
     })
+    output$operationControl=renderUI({
+        if(input$operation==0){ #extractStiffness
+            return(flowLayout(
+                       numericInput("rBead","Bead radius in meters",0),
+                       numericInput("CPMaxF","CPMaxF",value="0.05"),
+                       numericInput("percentToFit","percentToFit",value="0.2"),
+                       numericInput("roughness","roughness",value="0.05"),
+                       numericInput("Q","Q",value="0.5"),
+                       numericInput("approachTrim","approachTrim",value="0.2"),
+                       numericInput("minRise","minRise",value="0")
+                   ))
+        }
+    })
     
     getFits=eventReactive(input$goButton,{
-     
-        allFits=parExtractStiffness(input$rBead,dataset(),CPMaxF=input$CPMaxF,percentToFit=input$percentToFit,roughness=input$roughness,Q=input$Q,approachTrim=input$approachTrim,minRise=input$minRise,numCores=1)
+        allFits=list()
+        if(input$operation==0){#extractStiffness
+            allFits=parExtractStiffness(input$rBead,dataset(),CPMaxF=input$CPMaxF,percentToFit=input$percentToFit,roughness=input$roughness,Q=input$Q,approachTrim=input$approachTrim,minRise=input$minRise,numCores=1)
+        }else if(input$operation==1){#extractTimeConst
+            allFits=parExtractTimeConst(dataset(),numCores=1)
+        }
         return(allFits)
     })
     output$fitFrame=renderDataTable(collateFits(getFits()))
@@ -97,8 +115,13 @@ server=function(input,output){
         else {
             name = paste(name, fields, id)
         }
-
-        return(ggplot(thisFit$fit$curves)+geom_path(aes(x=zPos,y=F,color=curve))+labs(title=name)+theme_classic())
+        plot=ggplot()
+        if(input$operation==1){
+            plot=ggplot(thisFit$fit$curves)+geom_path(aes(x=t,y=F,color=curve))
+        }else{
+            plot=ggplot(thisFit$fit$curves)+geom_path(aes(x=zPos,y=F,color=curve))
+        }
+        return(plot+labs(title=name)+theme_classic())
     })
 }
 shinyApp(ui,server)
