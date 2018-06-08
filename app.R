@@ -11,12 +11,11 @@ ui=fluidPage(
         uiOutput("suffixControl"),
         actionButton("loadData","Load Data"),
         dataTableOutput("allCases"),
-        selectInput(inputId="operation",label="Choose Operation to Perform",c("Extract Stiffness"=0,"Extract Time Constant"=1)),
+        selectInput(inputId="operation",label="Choose Operation to Perform",c("Extract Stiffness"=0,"Extract Time Constant"=1,"Extract Approach Adhesion"=2,"Extract Retract Adhesion"=3)),
         uiOutput("operationControl"),
         actionButton("goButton","Run Fits"),
         dataTableOutput("fitFrame"),
-        plotOutput("fitPlot"),
-        numericInput("plotNo","Fit number to plot",value=1)        
+        uiOutput("fitPlotOutput")
     )
 )
 
@@ -38,7 +37,7 @@ server=function(input,output){
         files=input$directory
         dirs=c()
         newFiles=c()
-        #find all directories where temp files are stored
+                                        #find all directories where temp files are stored
         for(i in 1:(dim(files)[1])){
             file=files[i,]
             thisPath=""
@@ -46,7 +45,7 @@ server=function(input,output){
             for(segment in allSegments[c(-1,-1*length(allSegments))]){
                 thisPath=paste(thisPath,segment,sep="/")
             }
-                                                    #rename temporary files with original name
+                                        #rename temporary files with original name
             dirs=c(dirs,thisPath)
             newFile=paste(thisPath,file$name,sep="/")
             newFiles=c(newFiles,newFile)
@@ -80,48 +79,69 @@ server=function(input,output){
     output$operationControl=renderUI({
         if(input$operation==0){ #extractStiffness
             return(flowLayout(
-                       numericInput("rBead","Bead radius in meters",0),
-                       numericInput("CPMaxF","CPMaxF",value="0.05"),
-                       numericInput("percentToFit","percentToFit",value="0.2"),
-                       numericInput("roughness","roughness",value="0.05"),
-                       numericInput("Q","Q",value="0.5"),
-                       numericInput("approachTrim","approachTrim",value="0.2"),
-                       numericInput("minRise","minRise",value="0")
-                   ))
+                numericInput("rBead","Bead radius in meters",0),
+                numericInput("CPMaxF","CPMaxF",value="0.05"),
+                numericInput("percentToFit","percentToFit",value="0.2"),
+                numericInput("roughness","roughness",value="0.05"),
+                numericInput("Q","Q",value="0.5"),
+                numericInput("approachTrim","approachTrim",value="0.2"),
+                numericInput("minRise","minRise",value="0")
+            ))
         }
     })
     
     getFits=eventReactive(input$goButton,{
         allFits=list()
+        if(input$operation==0 || input$operation==1){
+            output$fitPlotOutput=renderUI(return(verticalLayout(
+                plotOutput("fitPlot"),
+                numericInput("plotNo","Fit number to plot",value=1)
+            )))
+        }else{
+            output$fitPlotOutput=renderUI(NULL)
+        }
         if(input$operation==0){#extractStiffness
             allFits=parExtractStiffness(input$rBead,dataset(),CPMaxF=input$CPMaxF,percentToFit=input$percentToFit,roughness=input$roughness,Q=input$Q,approachTrim=input$approachTrim,minRise=input$minRise,numCores=1)
         }else if(input$operation==1){#extractTimeConst
             allFits=parExtractTimeConst(dataset(),numCores=1)
+        }else if(input$operation==2){#approach Adhesion
+            allFits=parExtractApproachAdhesion(dataset(),numCores=1)
+        }else if(input$operation==3){#retract adhesion
+            allFits=parExtractRetractionAdhesion(dataset(),numCores=1)
         }
         return(allFits)
     })
-    output$fitFrame=renderDataTable(collateFits(getFits()))
-    output$fitPlot=renderPlot({
-        allFits=getFits()
-        thisFit=allFits$fits[[input$plotNo]]
-        id = thisFit$ident
-        fields = names(id)
-        name = ""
-        if (length(fields) > 1) {
-            for (i in 1:length(fields)) {
-                name = paste(name, fields[i], id[1, fields[i]])
-            }
-        }
-        else {
-            name = paste(name, fields, id)
-        }
-        plot=ggplot()
-        if(input$operation==1){
-            plot=ggplot(thisFit$fit$curves)+geom_path(aes(x=t,y=F,color=curve))
+    output$fitFrame=renderDataTable({
+        if(input$operation==0 || input$operation==1){
+            return(collateFits(getFits()))
         }else{
-            plot=ggplot(thisFit$fit$curves)+geom_path(aes(x=zPos,y=F,color=curve))
+            qreturn(getFits())     
         }
-        return(plot+labs(title=name)+theme_classic())
     })
+    output$fitPlot=renderPlot({
+        if(input$operation==0 || input$operation==1){
+            allFits=getFits()
+            thisFit=allFits$fits[[input$plotNo]]
+            id = thisFit$ident
+            fields = names(id)
+            name = ""
+            if (length(fields) > 1) {
+                for (i in 1:length(fields)) {
+                    name = paste(name, fields[i], id[1, fields[i]])
+                }
+            }
+            else {
+                name = paste(name, fields, id)
+            }
+            plot=ggplot()
+            if(input$operation==1){
+                plot=ggplot(thisFit$fit$curves)+geom_path(aes(x=t,y=F,color=curve))
+            }else{
+                plot=ggplot(thisFit$fit$curves)+geom_path(aes(x=zPos,y=F,color=curve))
+            }
+            return(plot+labs(title=name)+theme_classic())
+        }
+    })
+
 }
 shinyApp(ui,server)
