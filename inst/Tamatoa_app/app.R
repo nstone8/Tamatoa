@@ -1,7 +1,3 @@
-library(shiny)
-library(Rasylum)
-library(ggplot2)
-
 ui=fluidPage(
     titlePanel("Rasylum"),
     mainPanel(
@@ -115,7 +111,7 @@ server=function(input,output){
         if(input$operation==0 || input$operation==1){
             return(collateFits(getFits()))
         }else{
-            qreturn(getFits())     
+            return(getFits())     
         }
     })
     output$fitPlot=renderPlot({
