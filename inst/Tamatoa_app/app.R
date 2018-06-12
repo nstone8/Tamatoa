@@ -91,10 +91,13 @@ server=function(input,output){
         if(input$operation==0 || input$operation==1){
             output$fitPlotOutput=renderUI(return(verticalLayout(
                 plotOutput("fitPlot"),
-                numericInput("plotNo","Fit number to plot",value=1)
+                numericInput("plotNo","Fit number to plot",value=1),
+                downloadButton("download",label="Save Fits")
             )))
         }else{
-            output$fitPlotOutput=renderUI(NULL)
+            output$fitPlotOutput=renderUI(return(verticalLayout(
+                downloadButton("download",label="Save Fits")
+            )))
         }
         if(input$operation==0){#extractStiffness
             allFits=parExtractStiffness(input$rBead,dataset(),CPMaxF=input$CPMaxF,percentToFit=input$percentToFit,roughness=input$roughness,Q=input$Q,approachTrim=input$approachTrim,minRise=input$minRise,numCores=1)
@@ -137,6 +140,10 @@ server=function(input,output){
             }
             return(plot+labs(title=name)+theme_classic())
         }
+    })
+    output$download=downloadHandler(filename="fits.Rda",content=function(file){
+        fits=getFits()
+        save(fits,file=file)
     })
 
 }
