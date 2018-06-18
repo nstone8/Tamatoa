@@ -75,13 +75,12 @@ server=function(input,output){
     output$operationControl=renderUI({
         if(input$operation==0){ #extractStiffness
             return(flowLayout(
-                numericInput("rBead","Bead radius in meters",0),
-                numericInput("CPMaxF","CPMaxF",value="0.05"),
-                numericInput("percentToFit","percentToFit",value="0.2"),
-                numericInput("roughness","roughness",value="0.05"),
-                numericInput("Q","Q",value="0.5"),
-                numericInput("approachTrim","approachTrim",value="0.2"),
-                numericInput("minRise","minRise",value="0")
+                numericInput("r","Bead radius in meters",0),
+                numericInput("approachLength","Approach Length",value="0.1"),
+                numericInput("contactLength","Contact Length",value="0.1"),
+                numericInput("searchWidth","Search Width",value="0.2"),
+                numericInput("maxF","Max Force",value="0.5"),
+                numericInput("weight","Weight",value="4")
             ))
         }
     })
@@ -100,7 +99,7 @@ server=function(input,output){
             )))
         }
         if(input$operation==0){#extractStiffness
-            allFits=parExtractStiffness(input$rBead,dataset(),CPMaxF=input$CPMaxF,percentToFit=input$percentToFit,roughness=input$roughness,Q=input$Q,approachTrim=input$approachTrim,minRise=input$minRise,numCores=1)
+            allFits=parExtractStiffness(dataset(),input$r,input$approachLength,input$contactLength,input$searchWidth,input$maxF,input$weight,numCores=1)
         }else if(input$operation==1){#extractTimeConst
             allFits=parExtractTimeConst(dataset(),numCores=1)
         }else if(input$operation==2){#approach Adhesion
