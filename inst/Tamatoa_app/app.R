@@ -140,9 +140,9 @@ server=function(input,output){
             return(plot+labs(title=name)+theme_classic())
         }
     })
-    output$download=downloadHandler(filename="fits.Rda",content=function(file){
+    output$download=downloadHandler(filename="fits.rds",content=function(file){
         fits=getFits()
-        save(fits,file=file)
+        saveRDS(fits,file=file)
     })
 
 }

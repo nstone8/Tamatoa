@@ -1,11 +1,11 @@
 Package: Tamatoa
-Version: 0.1
+Version: 0.1.1
 Date: 2018-06-11
 Title: Tamatoa, A Rasylum GUI
 Authors@R: c(person("Nicholas", "Stone", role = c("aut", "cre"),
                      email = "stone.nicholas@gmail.com"))
 Maintainer: Joe Developer <stone.nicholas@gmail.com>
-Depends: R, nlme, shiny, ggplot2, Rasylum
+Depends: R (>= 3.1.0), nlme, shiny, ggplot2, Rasylum
 Description: A GUI allowing basic use of the 'Rasylum' package
 License: GPL (>= 3)
 URL: https://github.org/nstone8/Tamatoa
