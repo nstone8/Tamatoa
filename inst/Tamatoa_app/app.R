@@ -33,6 +33,11 @@ server=function(input,output){
         files=input$directory
         dirs=c()
         newFiles=c()
+
+                                        #Correct for bad path separator on windows
+        if(.Platform$OS.type=="windows"){
+            files$datapath=gsub("\\\\","/",files$datapath)
+        }
                                         #find all directories where temp files are stored
         for(i in 1:(dim(files)[1])){
             file=files[i,]
