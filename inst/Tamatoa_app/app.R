@@ -85,7 +85,8 @@ server=function(input,output){
                 numericInput("contactLength","Contact Length",value="0.1"),
                 numericInput("searchWidth","Search Width",value="0.2"),
                 numericInput("maxF","Max Force",value="0.5"),
-                numericInput("weight","Weight",value="4")
+                numericInput("weight","Weight",value="4"),
+                checkBoxInput("correctVirtDefl","Correct for Virtual Deflection?",value=TRUE)
             ))
         }
     })
@@ -104,7 +105,7 @@ server=function(input,output){
             )))
         }
         if(input$operation==0){#extractStiffness
-            allFits=parExtractStiffness(dataset(),input$r,input$approachLength,input$contactLength,input$searchWidth,input$maxF,input$weight,numCores=1)
+            allFits=parExtractStiffness(dataset(),input$r,input$approachLength,input$contactLength,input$searchWidth,input$maxF,input$weight,input$correctVirtDefl,numCores=1)
         }else if(input$operation==1){#extractTimeConst
             allFits=parExtractTimeConst(dataset(),numCores=1)
         }else if(input$operation==2){#approach Adhesion
