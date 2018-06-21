@@ -86,7 +86,7 @@ server=function(input,output){
                 numericInput("searchWidth","Search Width",value="0.2"),
                 numericInput("maxF","Max Force",value="0.5"),
                 numericInput("weight","Weight",value="4"),
-                checkBoxInput("correctVirtDefl","Correct for Virtual Deflection?",value=TRUE)
+                checkboxInput("correctVirtDefl","Correct for Virtual Deflection?",value=TRUE)
             ))
         }
     })
