@@ -88,6 +88,10 @@ server=function(input,output){
                 numericInput("weight","Weight",value="4"),
                 checkboxInput("correctVirtDefl","Correct for Virtual Deflection?",value=TRUE)
             ))
+        }else if(input$operation==2 || input$operation==3){
+            return(flowLayout(
+                numericInput("percentFlatAdhesion","Percent Flat",0.8,min=0,max=1)          
+            ))
         }
     })
     
@@ -109,9 +113,9 @@ server=function(input,output){
         }else if(input$operation==1){#extractTimeConst
             allFits=parExtractTimeConst(dataset(),numCores=1)
         }else if(input$operation==2){#approach Adhesion
-            allFits=parExtractApproachAdhesion(dataset(),numCores=1)
+            allFits=parExtractApproachAdhesion(dataset(),input$percentFlatAdhesion,numCores=1)
         }else if(input$operation==3){#retract adhesion
-            allFits=parExtractRetractionAdhesion(dataset(),numCores=1)
+            allFits=parExtractRetractionAdhesion(dataset(),input$percentFlatAdhesion,numCores=1)
         }
         return(allFits)
     })
