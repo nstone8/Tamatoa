@@ -72,8 +72,10 @@ server=function(input,output){
     output$allCases=renderDataTable({
         allCases=dataset()
         allIdents=allCases[[1]]$ident
-        for(case in allCases[-1]){
-            allIdents=rbind(allIdents,case$ident)
+        if(length(allCases)>1){
+            for(case in allCases[-1]){
+                allIdents=rbind(allIdents,case$ident)
+            }
         }
         return(allIdents)
     })
