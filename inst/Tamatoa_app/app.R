@@ -72,9 +72,19 @@ server=function(input,output){
     output$allCases=renderDataTable({
         allCases=dataset()
         allIdents=allCases[[1]]$ident
+        if(length(allCases[[1]]$ident)<2){
+            allIdents=as.character(allCases[[1]]$ident)
+            allIdents=data.frame(allIdents)
+            names(allIdents)=names(allCases[[1]]$ident)
+        }
         if(length(allCases)>1){
             for(case in allCases[-1]){
-                allIdents=rbind(allIdents,case$ident)
+                newRow=case$ident
+                if(length(newRow)<2){
+                    newRow=data.frame(as.character(case$ident))
+                    names(newRow)=names(case$ident)
+                }
+                allIdents=rbind(allIdents,newRow)
             }
         }
         return(allIdents)
