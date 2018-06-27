@@ -133,7 +133,9 @@ server=function(input,output){
     })
     output$fitFrame=renderDataTable({
         if(input$operation==0 || input$operation==1){
-            return(collateFits(getFits()))
+            theseFits=getFits()
+            theseFits$fits=theseFits$fits[!is.na(theseFits$fits)] #drop failed fits
+            return(collateFits(theseFits))
         }else{
             return(getFits())     
         }
@@ -141,6 +143,7 @@ server=function(input,output){
     output$fitPlot=renderPlot({
         if(input$operation==0 || input$operation==1){
             allFits=getFits()
+            allFits$fits=allFits$fits[!is.na(allFits$fits)] #drop failed fits
             thisFit=allFits$fits[[input$plotNo]]
             id = thisFit$ident
             fields = names(id)
